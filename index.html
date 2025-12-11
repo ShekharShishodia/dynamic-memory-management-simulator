@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Allocation Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Rajdhani:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="text-center mt-4 mb-2">
+        <h1 class="title-font text-3xl md:text-4xl lg:text-5xl text-white flex items-center justify-center gap-4">
+            <i class="fas fa-meteor text-gray-400 text-2xl"></i>
+            DYNAMIC ALLOCATION VISUALIZER
+            <i class="fas fa-satellite text-gray-400 text-2xl"></i>
+        </h1>
+        <p class="text-gray-400 text-sm mt-2 font-light tracking-widest">Memory Management Simulator v2.0</p>
+    </header>
+
+    <!-- Main Grid Layout -->
+    <div class="main-grid">
+        
+        <!-- Left Column: Controls -->
+        <div class="flex flex-col gap-5">
+            
+            <!-- Panel 1: Control Panel -->
+            <div class="glass-card">
+                <div class="card-header">Control Panel</div>
+                
+                <div class="mb-4">
+                    <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wide">Algorithm Selection</label>
+                    <select id="algorithmSelect" class="custom-input cursor-pointer">
+                        <option value="firstFit">First Fit</option>
+                        <option value="bestFit">Best Fit</option>
+                        <option value="worstFit">Worst Fit</option>
+                        <option value="nextFit">Next Fit</option>
+                    </select>
+                    <div id="algoDesc" class="text-[10px] text-gray-500 mt-1 h-8 leading-tight">
+                        Finds the first hole that is large enough.
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wide">Total Memory Size</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="totalMemoryInput" value="500" class="custom-input text-center" min="100" max="1000">
+                        <button onclick="sim.reset()" class="btn-reset">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 2: Allocation -->
+            <div class="glass-card">
+                <div class="card-header">Allocation</div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wide">Process ID</label>
+                        <input type="text" id="processId" placeholder="P1" class="custom-input" value="P1">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wide">Size (Units)</label>
+                        <input type="number" id="processSize" placeholder="50" class="custom-input" value="50">
+                    </div>
+                </div>
+
+                <button onclick="sim.allocate()" class="btn-action">
+                    ALLOCATE <i class="fas fa-star text-xs animate-pulse"></i>
+                </button>
+            </div>
+
+            <!-- Panel 3: Tools -->
+            <div class="glass-card">
+                <div class="card-header">Tools</div>
+                <button onclick="sim.compact()" class="btn-action" style="background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%); border-color: rgba(255,255,255,0.2); color: #ccc;">
+                    COMPACT MEMORY
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Visualization & Logs -->
+        <div class="flex flex-col gap-5">
+            
+            <!-- Panel 4: Memory Heap -->
+            <div class="glass-card memory-panel-container">
+                <div class="card-header">Memory Heap</div>
+                
+                <!-- Stats Overlay (Top Right) -->
+                <div class="stats-overlay">
+                    <div class="text-xs text-gray-400 mb-1 uppercase tracking-wider text-right border-b border-gray-600 pb-1 inline-block">Statistics</div>
+                    <div class="stat-row">Total Size: <span id="statTotal">500</span></div>
+                    <div class="stat-row">Used: <span id="statUsed">0</span></div>
+                    <div class="stat-row">Free: <span id="statFree">500</span></div>
+                    <div class="stat-row">Fragmentation: <span id="statFrag">0%</span></div>
+                </div>
+
+                <!-- Visualization Track -->
+                <div id="memoryContainer" class="memory-track">
+                    <!-- Blocks injected here -->
+                </div>
+            </div>
+
+            <!-- Panel 5: System Log -->
+            <div class="glass-card log-panel">
+                <div class="card-header" style="font-size: 0.9rem; margin-bottom: 10px;">System Log</div>
+                <div id="logContainer" class="log-content">
+                    <div class="log-entry">System Initialized.</div>
+                    <div class="log-entry">Ready for allocation...</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Educational Content Grid -->
+    <div class="info-grid">
+        <!-- Advantages Section -->
+        <div class="glass-card">
+            <div class="card-header">
+                <i class="fas fa-brain text-[var(--neon-blue)] mr-2"></i> Why Dynamic Memory?
+            </div>
+            <ul class="feature-list">
+                <li>
+                    <i class="fas fa-bolt"></i>
+                    <div>
+                        <strong class="text-white">Efficiency:</strong>
+                        Dynamic memory allows programs to allocate only the exact amount of memory needed at runtime, preventing waste.
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-expand-arrows-alt"></i>
+                    <div>
+                        <strong class="text-white">Flexibility:</strong>
+                        Essential for data structures like Linked Lists, Trees, and Graphs where the total size cannot be known during compilation.
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-recycle"></i>
+                    <div>
+                        <strong class="text-white">Reusability:</strong>
+                        Memory can be freed (deallocated) when no longer needed, returning it to the heap for other processes to use.
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-layer-group"></i>
+                    <div>
+                        <strong class="text-white">Lifetime Control:</strong>
+                        Objects persist until explicitly deleted, unlike stack variables which disappear when a function returns.
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- C++ Code Section -->
+        <div class="glass-card">
+            <div class="card-header">
+                <i class="fas fa-code text-[var(--neon-purple)] mr-2"></i> C++ Implementation
+            </div>
+            <div class="code-block">
+<pre>
+<span class="code-comment">// Advanced Dynamic Memory Management in C++</span>
+<span class="code-keyword">#include</span> <span class="code-string">&lt;iostream&gt;</span>
+<span class="code-keyword">#include</span> <span class="code-string">&lt;vector&gt;</span>
+
+<span class="code-keyword">struct</span> <span class="code-type">Process</span> {
+    <span class="code-type">int</span> id;
+    <span class="code-type">int</span> size;
+};
+
+    
+    
+    
+    <span class="code-comment">// 3. Object Allocation</span>
+    std::cout << <span class="code-string">"\n--- Object Allocation ---"</span> << std::endl;
+    <span class="code-type">Process</span>* <span class="code-var">p1</span> = <span class="code-keyword">new</span> <span class="code-type">Process</span>{1, 1024};
+    std::cout << <span class="code-string">"Process "</span> << <span class="code-var">p1</span>->id << <span class="code-string">" uses "</span> << <span class="code-var">p1</span>->size << <span class="code-string">"MB"</span> << std::endl;
+    <span class="code-keyword">delete</span> <span class="code-var">p1</span>;
+
+    <span class="code-keyword">return</span> 0;
+}
+</pre>
+            </div>
+        </div>
+    </div>
+
+    
+</body>
+</html>
