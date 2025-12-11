@@ -470,7 +470,13 @@
     <span class="code-type">int</span> size;
 };
 
-    
+    <span class="code-type">int</span> <span class="code-var">main</span>() {
+    <span class="code-comment">// 1. Single Object Allocation</span>
+    std::cout << <span class="code-string">"--- Single Allocation ---"</span> << std::endl;
+    <span class="code-type">int</span>* <span class="code-var">ptr</span> = <span class="code-keyword">new</span> <span class="code-type">int</span>(42); 
+    std::cout << <span class="code-string">"Value: "</span> << *<span class="code-var">ptr</span> << std::endl;
+    <span class="code-keyword">delete</span> <span class="code-var">ptr</span>; <span class="code-comment">// Prevent memory leak</span>
+
     
     
     <span class="code-comment">// 3. Object Allocation</span>
@@ -478,7 +484,7 @@
     <span class="code-type">Process</span>* <span class="code-var">p1</span> = <span class="code-keyword">new</span> <span class="code-type">Process</span>{1, 1024};
     std::cout << <span class="code-string">"Process "</span> << <span class="code-var">p1</span>->id << <span class="code-string">" uses "</span> << <span class="code-var">p1</span>->size << <span class="code-string">"MB"</span> << std::endl;
     <span class="code-keyword">delete</span> <span class="code-var">p1</span>;
-
+    
     <span class="code-keyword">return</span> 0;
 }
 </pre>
