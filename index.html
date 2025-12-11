@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Rajdhani:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --neon-blue: #00e5ff;
@@ -305,7 +306,6 @@
             margin-top: 4px;
         }
     </style>
-    
 </head>
 <body>
 
@@ -470,7 +470,7 @@
     <span class="code-type">int</span> size;
 };
 
-    <span class="code-type">int</span> <span class="code-var">main</span>() {
+<span class="code-type">int</span> <span class="code-var">main</span>() {
     <span class="code-comment">// 1. Single Object Allocation</span>
     std::cout << <span class="code-string">"--- Single Allocation ---"</span> << std::endl;
     <span class="code-type">int</span>* <span class="code-var">ptr</span> = <span class="code-keyword">new</span> <span class="code-type">int</span>(42); 
@@ -480,21 +480,20 @@
     <span class="code-comment">// 2. Dynamic Array Allocation</span>
     std::cout << <span class="code-string">"\n--- Array Allocation ---"</span> << std::endl;
     <span class="code-type">int</span> <span class="code-var">size</span> = 5; 
-
+    
     <span class="code-type">int</span>* <span class="code-var">arr</span> = <span class="code-keyword">new</span> <span class="code-type">int</span>[<span class="code-var">size</span>]; <span class="code-comment">// Allocate array</span>
     <span class="code-keyword">for</span>(<span class="code-type">int</span> i = 0; i < <span class="code-var">size</span>; i++) {
         <span class="code-var">arr</span>[i] = i * 10;
         std::cout << <span class="code-string">"arr["</span> << i << <span class="code-string">"] = "</span> << <span class="code-var">arr</span>[i] << std::endl;
     }
-    
     <span class="code-keyword">delete</span>[] <span class="code-var">arr</span>; <span class="code-comment">// Important: use delete[] for arrays!</span>
-                                                                                                                                                          
+
     <span class="code-comment">// 3. Object Allocation</span>
     std::cout << <span class="code-string">"\n--- Object Allocation ---"</span> << std::endl;
     <span class="code-type">Process</span>* <span class="code-var">p1</span> = <span class="code-keyword">new</span> <span class="code-type">Process</span>{1, 1024};
     std::cout << <span class="code-string">"Process "</span> << <span class="code-var">p1</span>->id << <span class="code-string">" uses "</span> << <span class="code-var">p1</span>->size << <span class="code-string">"MB"</span> << std::endl;
     <span class="code-keyword">delete</span> <span class="code-var">p1</span>;
-    
+
     <span class="code-keyword">return</span> 0;
 }
 </pre>
@@ -502,7 +501,7 @@
         </div>
     </div>
 
-        <script>
+    <script>
         class MemorySimulator {
             constructor() {
                 this.totalSize = 500;
@@ -771,7 +770,5 @@
 
         const sim = new MemorySimulator();
     </script>
-
-    
 </body>
 </html>
