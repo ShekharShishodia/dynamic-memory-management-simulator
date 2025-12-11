@@ -486,6 +486,276 @@
         </div>
     </div>
 
+        <script>
+        class MemorySimulator {
+            constructor() {
+                this.totalSize = 500;
+                this.memory = [{
+                    id: null,
+                    size: 500,
+                    start: 0,
+                    isFree: true
+                }];
+                this.lastAllocIndex = 0;
+                
+                this.container = document.getElementById('memoryContainer');
+                this.logContainer = document.getElementById('logContainer');
+                
+                // Block style classes for round-robin coloring
+                this.blockClasses = ['block-p1', 'block-p2', 'block-p3', 'block-p4'];
+                
+                // Listeners
+                document.getElementById('algorithmSelect').addEventListener('change', (e) => {
+                    const desc = {
+                        'firstFit': 'Finds the first hole that is large enough.',
+                        'bestFit': 'Finds the smallest hole that is large enough.',
+                        'worstFit': 'Finds the largest available hole.',
+                        'nextFit': 'Starts search from last allocated location.'
+                    };
+                    document.getElementById('algoDesc').textContent = desc[e.target.value];
+                    this.log(`Algorithm switched to ${e.target.options[e.target.selectedIndex].text}`);
+                });
+
+                this.render();
+                this.updateStats();
+            }
+
+            log(msg) {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.textContent = msg;
+                this.logContainer.appendChild(entry);
+                this.logContainer.scrollTop = this.logContainer.scrollHeight;
+            }
+
+            reset() {
+                const newSize = parseInt(document.getElementById('totalMemoryInput').value) || 500;
+                this.totalSize = newSize;
+                this.memory = [{ id: null, size: newSize, start: 0, isFree: true }];
+                this.lastAllocIndex = 0;
+                this.log(`System Reset. Total Memory: ${newSize}`);
+                this.render();
+                this.updateStats();
+            }
+
+            allocate() {
+                const idInput = document.getElementById('processId');
+                const sizeInput = document.getElementById('processSize');
+                
+                const id = idInput.value.trim();
+                const size = parseInt(sizeInput.value);
+                const algorithm = document.getElementById('algorithmSelect').value;
+
+                if (!id || !size || size <= 0) {
+                    this.log("Error: Invalid inputs.");
+                    return;
+                }
+
+                if (this.memory.some(block => block.id === id)) {
+                    this.log(`Error: ID ${id} already exists.`);
+                    // Visual feedback
+                    idInput.classList.add('border-red-500');
+                    setTimeout(() => idInput.classList.remove('border-red-500'), 500);
+                    return;
+                }
+
+                let index = -1;
+
+                if (algorithm === 'firstFit') {
+                    index = this.memory.findIndex(b => b.isFree && b.size >= size);
+                } else if (algorithm === 'bestFit') {
+                    let minDiff = Infinity;
+                    this.memory.forEach((b, i) => {
+                        if (b.isFree && b.size >= size) {
+                            const diff = b.size - size;
+                            if (diff < minDiff) {
+                                minDiff = diff;
+                                index = i;
+                            }
+                        }
+                    });
+                } else if (algorithm === 'worstFit') {
+                    let maxDiff = -1;
+                    this.memory.forEach((b, i) => {
+                        if (b.isFree && b.size >= size) {
+                            const diff = b.size - size;
+                            if (diff > maxDiff) {
+                                maxDiff = diff;
+                                index = i;
+                            }
+                        }
+                    });
+                } else if (algorithm === 'nextFit') {
+                    for (let i = this.lastAllocIndex; i < this.memory.length; i++) {
+                        if (this.memory[i].isFree && this.memory[i].size >= size) {
+                            index = i;
+                            break;
+                        }
+                    }
+                    if (index === -1) {
+                        for (let i = 0; i < this.lastAllocIndex; i++) {
+                            if (this.memory[i].isFree && this.memory[i].size >= size) {
+                                index = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (index !== -1) {
+                    this.executeAllocation(index, id, size);
+                    this.log(`Allocated ${id} (${size} units)`);
+                    
+                    // Auto increment ID
+                    const match = id.match(/^([a-zA-Z]+)(\d+)$/);
+                    if (match) {
+                        idInput.value = match[1] + (parseInt(match[2]) + 1);
+                    }
+                } else {
+                    this.log(`Failed to allocate ${id}: No space found.`);
+                }
+            }
+
+            executeAllocation(index, id, size) {
+                const block = this.memory[index];
+                
+                if (block.size > size) {
+                    const newBlock = { id: id, size: size, start: block.start, isFree: false };
+                    const remainingBlock = { id: null, size: block.size - size, start: block.start + size, isFree: true };
+                    this.memory.splice(index, 1, newBlock, remainingBlock);
+                } else {
+                    block.id = id;
+                    block.isFree = false;
+                }
+
+                this.lastAllocIndex = index + 1;
+                if (this.lastAllocIndex >= this.memory.length) this.lastAllocIndex = 0;
+
+                this.render();
+                this.updateStats();
+            }
+
+            deallocate(id) {
+                const index = this.memory.findIndex(b => b.id === id);
+                if (index !== -1) {
+                    this.memory[index].id = null;
+                    this.memory[index].isFree = true;
+                    this.log(`Deallocated ${id}`);
+                    this.coalesce();
+                    this.render();
+                    this.updateStats();
+                }
+            }
+
+            compact() {
+                const usedBlocks = this.memory.filter(b => !b.isFree);
+                if (usedBlocks.length === 0 && this.memory.length === 1) return; // Already empty
+
+                let currentStart = 0;
+                usedBlocks.forEach(b => {
+                    b.start = currentStart;
+                    currentStart += b.size;
+                });
+
+                const totalUsed = usedBlocks.reduce((sum, b) => sum + b.size, 0);
+                const freeSize = this.totalSize - totalUsed;
+                
+                this.memory = [...usedBlocks];
+                if (freeSize > 0) {
+                    this.memory.push({
+                        id: null,
+                        size: freeSize,
+                        start: totalUsed,
+                        isFree: true
+                    });
+                }
+                
+                this.lastAllocIndex = 0;
+                this.log('Memory Compacted.');
+                this.render();
+                this.updateStats();
+            }
+
+            coalesce() {
+                for (let i = 0; i < this.memory.length - 1; i++) {
+                    if (this.memory[i].isFree && this.memory[i+1].isFree) {
+                        this.memory[i].size += this.memory[i+1].size;
+                        this.memory.splice(i+1, 1);
+                        i--;
+                    }
+                }
+                if (this.lastAllocIndex >= this.memory.length) this.lastAllocIndex = 0;
+            }
+
+            updateStats() {
+                const used = this.memory.filter(b => !b.isFree).reduce((a, b) => a + b.size, 0);
+                const free = this.totalSize - used;
+                
+                document.getElementById('statTotal').innerText = this.totalSize;
+                document.getElementById('statUsed').innerText = used;
+                document.getElementById('statFree').innerText = free;
+
+                const freeBlocks = this.memory.filter(b => b.isFree);
+                let fragPercent = 0;
+                if (freeBlocks.length > 1) {
+                    const maxFree = Math.max(...freeBlocks.map(b => b.size));
+                    const totalFree = freeBlocks.reduce((a, b) => a + b.size, 0);
+                    if (totalFree > 0) {
+                        fragPercent = Math.round(((totalFree - maxFree) / totalFree) * 100);
+                    }
+                }
+                document.getElementById('statFrag').innerText = `${fragPercent}%`;
+            }
+
+            render() {
+                this.container.innerHTML = '';
+                
+                // Get list of allocated IDs to assign consistent colors
+                const uniqueIds = [...new Set(this.memory.filter(b => !b.isFree).map(b => b.id))];
+
+                this.memory.forEach((block, idx) => {
+                    const div = document.createElement('div');
+                    
+                    // We use flex basis for width to ensure responsiveness within the container
+                    const widthPercent = (block.size / this.totalSize) * 100;
+                    div.style.width = `${widthPercent}%`;
+                    
+                    if (!block.isFree) {
+                        // Deterministic color assignment based on ID char code sum
+                        const charSum = block.id.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+                        const colorClass = this.blockClasses[charSum % this.blockClasses.length];
+                        
+                        div.className = `mem-block ${colorClass}`;
+                        div.onclick = () => this.deallocate(block.id);
+                        div.title = `Click to deallocate ${block.id}`;
+                        
+                        // Text logic: if very small, show vertical or hidden
+                        if (widthPercent < 5) {
+                             div.innerHTML = `<span class="vertical-text">${block.id}</span>`;
+                        } else {
+                            div.innerHTML = `
+                                <div class="font-bold text-sm">Process ID</div>
+                                <div class="text-xl font-bold mb-1">${block.id}</div>
+                                <div class="text-xs opacity-75">${block.size}u</div>
+                            `;
+                        }
+                    } else {
+                        div.className = `mem-block block-free`;
+                        if (widthPercent > 8) {
+                            div.innerHTML = `<div>FREE</div><div class="text-xs opacity-50">${block.size}</div>`;
+                        } else {
+                            div.innerHTML = `<div class="text-xs opacity-50">${block.size}</div>`;
+                        }
+                    }
+
+                    this.container.appendChild(div);
+                });
+            }
+        }
+
+        const sim = new MemorySimulator();
+    </script>
+
     
 </body>
 </html>
