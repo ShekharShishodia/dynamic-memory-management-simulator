@@ -487,7 +487,8 @@
         std::cout << <span class="code-string">"arr["</span> << i << <span class="code-string">"] = "</span> << <span class="code-var">arr</span>[i] << std::endl;
     }
     
-    
+    <span class="code-keyword">delete</span>[] <span class="code-var">arr</span>; <span class="code-comment">// Important: use delete[] for arrays!</span>
+                                                                                                                                                          
     <span class="code-comment">// 3. Object Allocation</span>
     std::cout << <span class="code-string">"\n--- Object Allocation ---"</span> << std::endl;
     <span class="code-type">Process</span>* <span class="code-var">p1</span> = <span class="code-keyword">new</span> <span class="code-type">Process</span>{1, 1024};
